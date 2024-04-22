@@ -2,11 +2,13 @@ import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import io.github.torrentpicker.findEnv
+import io.github.torrentpicker.GIT_HEAD
+import io.github.torrentpicker.COMMIT_COUNT_VERSION
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    application
     alias(ag.plugins.docker.api)
+    alias(ag.plugins.buildconfig)
 
     alias(ag.plugins.spring.boot)
     alias(ag.plugins.spring.deps)
@@ -14,27 +16,19 @@ plugins {
     alias(ag.plugins.kotlin.plugin.jvm)
     alias(ag.plugins.kotlin.plugin.serialization)
     alias(ag.plugins.kotlin.plugin.spring)
+
+    application
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+group = "${rootProject.group}.agentgate"
+version = rootProject.version
+
+val mMainClass = "$group.Application"
+application {
+    mainClass = mMainClass
 }
-
-val archiveName = "agent-gate"
-
-tasks.bootJar {
-    archiveBaseName = archiveName
-}
-
 springBoot {
-    mainClass = "io.github.sgpublic.agentgate.Application"
-}
-
-dependencyManagement {
-    imports {
-        mavenBom(ag.spring.cloud.deps.get().toString())
-    }
+    mainClass = mMainClass
 }
 
 dependencies {
@@ -46,11 +40,25 @@ dependencies {
     implementation(ag.uniktx.kotlin.common)
     implementation(ag.uniktx.kotlin.logback)
 
+    implementation(ag.clikt)
+    implementation(ag.jsoup)
+
     implementation(ag.jjwt.api)
     runtimeOnly(ag.jjwt.impl)
     runtimeOnly(ag.jjwt.gson)
 }
 
+val archiveName = "agent-gate"
+
+tasks.bootJar {
+    archiveBaseName = archiveName
+}
+
+dependencyManagement {
+    imports {
+        mavenBom(ag.spring.cloud.deps.get().toString())
+    }
+}
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
@@ -63,6 +71,20 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+buildTimeConfig {
+    config {
+        packageName = "$group"
+        objectName = "BuildConfig"
+        destination = project.layout.buildDirectory.asFile
+
+        configProperties {
+            val VERSION_NAME: String by string("$version")
+            val VERSION_CODE: Int by int(COMMIT_COUNT_VERSION)
+            val COMMIT_ID: String by string(GIT_HEAD)
+            val APPLICATION_ID: String by string(rootProject.name)
+        }
+    }
+}
 
 tasks {
     val clean by getting

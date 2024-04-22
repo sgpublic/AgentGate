@@ -1,5 +1,6 @@
 package io.github.sgpublic.agentgate.exception
 
+import io.github.sgpublic.agentgate.Config
 import io.github.sgpublic.agentgate.core.utils.JsonGlobal
 import org.springframework.http.server.reactive.ServerHttpResponse
 import kotlinx.serialization.Serializable
@@ -29,7 +30,6 @@ class FailedResult private constructor(
         val WrongPassword get() = FailedResult(-110102, "用户不存在或密码错误")
         val ExpiredToken get() = FailedResult(-110105, "无效的 token")
     }
-
 }
 
 val SuccessResult = RespResult(200, "success.")

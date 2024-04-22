@@ -1,0 +1,11 @@
+{
+  "login_title": "Sign in to ",
+  "login_username": "Username",
+  "login_username_hint": "Enter your username",
+  "login_username_empty": "Empty username!",
+  "login_password": "Password",
+  "login_password_hint": "Enter your password",
+  "login_password_empty": "Empty password",
+  "login_action": "SIGN IN",
+  "login_failed": "Login failed, "
+}

@@ -1,11 +1,11 @@
 import zhHans from "./locales/zh-Hans.json"
-import zhHant from "./locales/zh-Hant.json"
+import enUS from "./locales/en-US.json"
 
 export const resources = {
-    "zh-Hans": {
+    "zh": {
         translation: zhHans
     },
-    "zh-Hant": {
-        translation: zhHant
-    }
+    "en": {
+        translation: enUS
+    },
 }

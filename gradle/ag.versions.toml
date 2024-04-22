@@ -4,6 +4,8 @@
 kotlin = "1.9.23"
 docker = "9.4.0"
 release-github = "2.5.2"
+buildkonfig = "0.15.1"
+buildconfig = "2.1.0"
 nodejs = "7.0.2"
 spring-boot = "3.2.5"
 spring-deps = "1.1.4"
@@ -12,6 +14,10 @@ spring-cloud-deps = "2023.0.1"
 uniktx = "1.0.0-beta03"
 jjwt = "0.12.5"
 kotlinx-json = "1.6.3"
+clikt = "4.3.0"
+kaml = "0.58.0"
+sxml = "1.2.2"
+jsoup = "1.17.2"
 
 [libraries]
 kotlin-plugin-gradle = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -31,6 +37,11 @@ spring-cloud-starter-gateway = { group = "org.springframework.cloud", name = "sp
 uniktx-kotlin-common = { group = "io.github.sgpublic", name = "uniktx-kotlin-common", version.ref = "uniktx" }
 uniktx-kotlin-logback = { group = "io.github.sgpublic", name = "uniktx-kotlin-logback", version.ref = "uniktx" }
 
+clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
+sxml = { group = "io.github.sgpublic", name = "SimplifyXMLObject", version.ref = "sxml" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+
 jjwt-api = { group = "io.jsonwebtoken", name = "jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { group = "io.jsonwebtoken", name = "jjwt-impl", version.ref = "jjwt" }
 jjwt-gson = { group = "io.jsonwebtoken", name = "jjwt-gson", version.ref = "jjwt" }
@@ -41,9 +52,12 @@ release-github = { id = "com.github.breadmoirai.github-release", version.ref = "
 nodejs = { id = "com.github.node-gradle.node", version.ref = "nodejs" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-deps = { id = "io.spring.dependency-management", version.ref = "spring-deps" }
+kotlin-plugin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-plugin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-plugin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlin-plugin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+buildconfig = { id = "dev.limebeck.build-time-config", version.ref = "buildconfig" }
 
 [bundles]

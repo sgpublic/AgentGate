@@ -15,7 +15,9 @@ node {
     nodeProjectDir = projectDir
 }
 
+tasks.register<PnpmTask>("runStart") {
+    args = listOf("run", "start")
+}
 tasks.register<PnpmTask>("runBuild") {
-    dependsOn("pnpmInstall")
     args = listOf("run", "build")
 }
