@@ -1,7 +1,7 @@
 package io.github.sgpublic.agentgate
 
 import io.github.sgpublic.agentgate.core.utils.findEnv
-import io.github.sgpublic.agentgate.security.AGENT_GATE_AUTH_PATH
+import io.github.sgpublic.agentgate.security.AGENT_GATE_BASE_PATH
 import io.github.sgpublic.agentgate.security.TokenFilterImpl
 import io.github.sgpublic.agentgate.security.WebFilterImpl
 import org.springframework.boot.SpringApplication
@@ -19,21 +19,21 @@ import org.springframework.web.reactive.function.server.ServerResponse
 
 @SpringBootApplication
 class Application {
-    private val AGENT_GATE_TARGET: String by lazy {
-        return@lazy findEnv("AGENT_GATE_TARGET")
+    private val AGENT_GATE_BASE_TARGET: String by lazy {
+        return@lazy findEnv("AGENT_GATE_BASE_TARGET")
             ?: throw IllegalArgumentException("缺少转发目标配置！")
     }
 
     @Bean
     fun staticResourceRouter(): RouterFunction<ServerResponse> {
-        return RouterFunctions.resources("${AGENT_GATE_AUTH_PATH}/web/**", ClassPathResource("public/"))
+        return RouterFunctions.resources("$AGENT_GATE_BASE_PATH/web/**", ClassPathResource("public/"))
     }
 
     @Bean
     fun gatewayRouteLocator(builder: RouteLocatorBuilder, throttle: AddRequestHeaderGatewayFilterFactory): RouteLocator {
         return builder.routes()
             .route("static") { r ->
-                r.path("${AGENT_GATE_AUTH_PATH}/web/**")
+                r.path("${AGENT_GATE_BASE_PATH}/web/**")
                     .filters {
                         it.filter(WebFilterImpl)
                     }
@@ -44,7 +44,7 @@ class Application {
                     .filters {
                         it.filter(TokenFilterImpl)
                     }
-                    .uri(AGENT_GATE_TARGET)
+                    .uri(AGENT_GATE_BASE_TARGET)
             }
             .build()
     }
@@ -57,7 +57,7 @@ class Application {
         @JvmStatic
         fun main(args: Array<String>) {
             Bootstrap(Application::class.java)
-                .setPort(findEnv("AGENT_GATE_PORT", 1180))
+                .setPort(findEnv("AGENT_GATE_BASE_PORT", 1180))
                 .setDebug(AGENT_GATE_DEBUG)
                 .run(args)
         }

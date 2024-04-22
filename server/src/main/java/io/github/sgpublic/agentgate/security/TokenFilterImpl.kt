@@ -13,8 +13,8 @@ import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import java.net.URI
 
-val AGENT_GATE_AUTH_PATH: String by lazy {
-    findEnv("AGENT_GATE_AUTH_PATH", "/agent-gate")
+val AGENT_GATE_BASE_PATH: String by lazy {
+    findEnv("AGENT_GATE_BASE_PATH", "/agent-gate")
 }
 
 object WebFilterImpl: GatewayFilter {
@@ -22,19 +22,19 @@ object WebFilterImpl: GatewayFilter {
         val request: ServerHttpRequest = exchange.request
         val path: String = request.path.value()
         log.info("${request.method} $path")
-        if (path == "$AGENT_GATE_AUTH_PATH/web") {
+        if (path == "$AGENT_GATE_BASE_PATH/web") {
             return exchange.response
                 .also {
                     it.statusCode = HttpStatus.MOVED_PERMANENTLY
-                    it.headers.location = URI.create("${AGENT_GATE_AUTH_PATH}/web/")
+                    it.headers.location = URI.create("${AGENT_GATE_BASE_PATH}/web/")
                 }
                 .setComplete()
         }
-        if (path == "$AGENT_GATE_AUTH_PATH/web/") {
+        if (path == "$AGENT_GATE_BASE_PATH/web/") {
             return exchange.response
                 .also {
                     it.statusCode = HttpStatus.MOVED_PERMANENTLY
-                    it.headers.location = URI.create("${AGENT_GATE_AUTH_PATH}/web/index.html")
+                    it.headers.location = URI.create("${AGENT_GATE_BASE_PATH}/web/index.html")
                 }
                 .setComplete()
         }
@@ -58,14 +58,14 @@ object TokenFilterImpl: GatewayFilter {
         }
 
         // 如果访问的接口为登录接口则执行认证
-        if (path.startsWith("$AGENT_GATE_AUTH_PATH/login") && request.method == HttpMethod.POST) {
+        if (path.startsWith("$AGENT_GATE_BASE_PATH/login") && request.method == HttpMethod.POST) {
             return exchange.checkAuth()
         }
 //        if (path.startsWith("$AGENT_GATE_AUTH_PATH/web")) {
 //            return chain.filter(exchange)
 //        }
 
-        val auth = request.cookies[AGENT_GATE_HEADER_KEY]
+        val auth = request.cookies[AGENT_GATE_TOKEN_COOKIE_KEY]
             ?.firstOrNull()?.value
         val errorType = if (auth != null) {
             auth.checkTag()
@@ -79,7 +79,7 @@ object TokenFilterImpl: GatewayFilter {
         return exchange.response
             .also {
                 it.statusCode = HttpStatus.MOVED_TEMPORARILY
-                it.headers.location = URI.create("${AGENT_GATE_AUTH_PATH}/web/")
+                it.headers.location = URI.create("${AGENT_GATE_BASE_PATH}/web/")
             }
             .write(errorType)
     }
