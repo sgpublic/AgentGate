@@ -1,0 +1,10 @@
+{
+  "login_title": "登录到 ",
+  "login_username": "用户名",
+  "login_username_hint": "请输入用户名",
+  "login_username_empty": "用户名为空！",
+  "login_password": "密码",
+  "login_password_hint": "请输入密码",
+  "login_password_empty": "密码为空！",
+  "login_action": "登录"
+}
