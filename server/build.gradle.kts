@@ -118,25 +118,32 @@ tasks {
     }
 
     val tag = "mhmzx/$archiveName"
-    val dockerBuildImage by creating(DockerBuildImage::class) {
+    val dockerBuildReleaseImage by creating(DockerBuildImage::class) {
         group = "docker"
         dependsOn(assembleDist, installDist, dockerCreateDockerfile)
         inputDir = project.file("./build")
         dockerFile = dockerCreateDockerfile.destFile
         images.add("$tag:$version")
         images.add("$tag:latest")
-        images.add("$tag:nightly")
         noCache = true
     }
     val dockerPushReleaseImageOfficial by creating(DockerPushImage::class) {
         group = "docker"
-        dependsOn(dockerBuildImage)
+        dependsOn(dockerBuildReleaseImage)
         images.add("$tag:${rootProject.version}")
         images.add("$tag:latest")
     }
+    val dockerBuildNightlyImage by creating(DockerBuildImage::class) {
+        group = "docker"
+        dependsOn(assembleDist, installDist, dockerCreateDockerfile)
+        inputDir = project.file("./build")
+        dockerFile = dockerCreateDockerfile.destFile
+        images.add("$tag:nightly")
+        noCache = true
+    }
     val dockerPushNightlyImageOfficial by creating(DockerPushImage::class) {
         group = "docker"
-        dependsOn(dockerBuildImage)
+        dependsOn(dockerBuildNightlyImage)
         images.add("$tag:nightly")
     }
 }
