@@ -125,14 +125,19 @@ tasks {
         dockerFile = dockerCreateDockerfile.destFile
         images.add("$tag:$version")
         images.add("$tag:latest")
+        images.add("$tag:nightly")
         noCache = true
     }
-
-    val dockerPushImageOfficial by creating(DockerPushImage::class) {
+    val dockerPushReleaseImageOfficial by creating(DockerPushImage::class) {
         group = "docker"
         dependsOn(dockerBuildImage)
         images.add("$tag:${rootProject.version}")
         images.add("$tag:latest")
+    }
+    val dockerPushNightlyImageOfficial by creating(DockerPushImage::class) {
+        group = "docker"
+        dependsOn(dockerBuildImage)
+        images.add("$tag:nightly")
     }
 }
 
