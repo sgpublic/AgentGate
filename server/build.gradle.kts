@@ -104,7 +104,7 @@ tasks {
         from("openjdk:17-slim-bullseye")
         workingDir("/app")
         copy {
-            copyFile("./install/$archiveName", "/app")
+            copyFile("./install/${project.name}", "/app")
         }
         runCommand(listOf(
             "useradd -u 1000 runner",
