@@ -31,6 +31,11 @@ springBoot {
     mainClass = mMainClass
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 dependencies {
     implementation(ag.kotlin.reflect)
     implementation(ag.kotlinx.serialization.json)
