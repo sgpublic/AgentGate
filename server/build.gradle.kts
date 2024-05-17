@@ -86,12 +86,21 @@ buildTimeConfig {
 }
 
 tasks {
-    val clean by getting
-    val assembleDist by getting {
-        dependsOn(":web:runBuild")
+    val clean by getting {
+        doLast {
+            delete("./src/main/resources/public")
+        }
     }
 
-    val installDist by getting
+    val assembleWeb by creating {
+        dependsOn(":web:pnpmInstall", ":web:runBuild")
+        mustRunAfter(":web:pnpmInstall", ":web:runBuild")
+    }
+
+    val assembleServer by creating {
+        dependsOn(assembleWeb, assembleDist, installDist)
+        mustRunAfter(assembleWeb)
+    }
 
     val dockerCreateDockerfile by creating(Dockerfile::class) {
         group = "docker"
@@ -112,7 +121,7 @@ tasks {
     val tag = "mhmzx/agent-gate"
     val dockerBuildReleaseImage by creating(DockerBuildImage::class) {
         group = "docker"
-        dependsOn(assembleDist, installDist, dockerCreateDockerfile)
+        dependsOn(assembleServer, dockerCreateDockerfile)
         inputDir = project.file("./build")
         dockerFile = dockerCreateDockerfile.destFile
         images.add("$tag:$version")
@@ -127,7 +136,7 @@ tasks {
     }
     val dockerBuildNightlyImage by creating(DockerBuildImage::class) {
         group = "docker"
-        dependsOn(assembleDist, installDist, dockerCreateDockerfile)
+        dependsOn(assembleServer, dockerCreateDockerfile)
         inputDir = project.file("./build")
         dockerFile = dockerCreateDockerfile.destFile
         images.add("$tag:nightly")
