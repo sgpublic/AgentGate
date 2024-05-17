@@ -53,12 +53,6 @@ dependencies {
     runtimeOnly(ag.jjwt.gson)
 }
 
-val archiveName = "agent-gate"
-
-tasks.bootJar {
-    archiveBaseName = archiveName
-}
-
 dependencyManagement {
     imports {
         mavenBom(ag.spring.cloud.deps.get().toString())
@@ -103,9 +97,7 @@ tasks {
         group = "docker"
         from("openjdk:17-slim-bullseye")
         workingDir("/app")
-        copy {
-            copyFile("./install/${project.name}", "/app")
-        }
+        copyFile("./install/${project.name}", "/app")
         runCommand(listOf(
             "useradd -u 1000 runner",
             "apt-get update",
@@ -114,10 +106,10 @@ tasks {
         ).joinToString(" &&\\\n "))
         user("runner")
         volume("/app/config.yaml")
-        entryPoint("/app/bin/$archiveName")
+        entryPoint("/app/bin/${project.name}")
     }
 
-    val tag = "mhmzx/$archiveName"
+    val tag = "mhmzx/agent-gate"
     val dockerBuildReleaseImage by creating(DockerBuildImage::class) {
         group = "docker"
         dependsOn(assembleDist, installDist, dockerCreateDockerfile)

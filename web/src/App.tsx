@@ -1,4 +1,5 @@
-import {Dispatch, FC, SetStateAction, useRef, useState} from "react";
+import React, {Dispatch, FC, SetStateAction, useEffect, useRef, useState} from "react";
+import {Helmet} from "react-helmet";
 import {useTranslation} from "react-i18next";
 import {Form, Card, FormItem, Input, FormSubmit, FormHelpers, Alert} from "@hi-ui/hiui";
 import {TFunction} from "i18next";
@@ -11,6 +12,15 @@ const LoginPage: FC = () => {
     const [loginDoing, setLoginDoing] = useState(false)
     const [alert, setAlert] = useState<string | null>(null)
 
+    const [logo, setLogo] = useState<string | null>(null)
+    const [title, setTitle] = useState<string>("AgentGate")
+    useEffect(() => {
+        getInfo(setLogo, setTitle)
+    }, [])
+    useEffect(() => {
+        document.title = t("login_title") + title
+    }, [title]);
+
     return (
         <div style={{
             display: "flex",
@@ -18,18 +28,33 @@ const LoginPage: FC = () => {
             flexDirection: "column",
             height: "100vh",
         }}>
-            <img
-                src={""}
-                alt={"logo"}
-                style={{
-                    width: 60,
-                    height: 60,
-                    marginTop: 36,
-                    marginBottom: 24,
-                }}/>
+            {
+                logo !== null && (
+                    <div>
+                        <Helmet>
+                            <link rel={"icon"} href={logo} />
+                            <link rel={"apple-touch-icon"} href={logo} />
+                        </Helmet>
+                        <img
+                            src={logo ?? ""}
+                            alt={"logo"}
+                            style={{
+                                width: 60,
+                                height: 60,
+                                marginTop: 36,
+                                marginBottom: 24,
+                            }}/>
+                    </div>
+                )
+            }
+            {
+                logo === null && (
+                    <div style={{height: 20}} />
+                )
+            }
             <div style={{
                 fontSize: 20,
-            }}>{t("login_title")}</div>
+            }}>{t("login_title") + title}</div>
             {
                 alert !== null && (
                     <Alert
@@ -137,6 +162,21 @@ function doLogin(
             showAlert(t("login_failed") + error.message)
         }).finally(() => {
             setLoading(false)
+        })
+    }, 500)
+}
+
+function getInfo(
+    setLogo: Dispatch<SetStateAction<string | null>>,
+    setTitle: Dispatch<SetStateAction<string>>,
+) {
+    setTimeout(() => {
+        AgentGateAPI.get("/api/info").then(value => {
+            setLogo(value.data["serviceLogo"])
+            setTitle(value.data["serviceName"])
+        }).catch(error => {
+            setLogo(null)
+            setTitle("AgentGate")
         })
     }, 500)
 }
