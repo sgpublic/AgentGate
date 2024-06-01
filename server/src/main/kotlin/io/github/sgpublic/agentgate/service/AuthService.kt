@@ -2,7 +2,9 @@ package io.github.sgpublic.agentgate.service
 
 import io.github.sgpublic.agentgate.Config
 import io.github.sgpublic.agentgate.exception.FailedResult
+import io.github.sgpublic.kotlin.core.util.BASE_64
 import io.github.sgpublic.kotlin.core.util.MD5_FULL_COMPRESSED
+import io.github.sgpublic.kotlin.core.util.ORIGIN_BASE64
 import io.github.sgpublic.kotlin.util.log
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.JwtException
@@ -10,6 +12,8 @@ import io.jsonwebtoken.JwtParser
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import kotlinx.serialization.Serializable
+import org.jsoup.Connection.Base
+import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.SecretKey
 
@@ -31,6 +35,15 @@ object AuthService {
     }
     private val parser: JwtParser by lazy {
         return@lazy Jwts.parser().verifyWith(secretKey).build()
+    }
+
+    fun checkBasicAuth(basic: String): FailedResult? {
+        val (username, password) = basic.substring(6)
+            .ORIGIN_BASE64.toString(StandardCharsets.UTF_8)
+            .split(":")
+        return FailedResult.Auth.WrongPassword.takeUnless {
+            username == Config.AGENT_GATE_AUTH_USERNAME && password == Config.AGENT_GATE_AUTH_PASSWORD
+        }
     }
 
     fun checkTag(token: String): FailedResult? {

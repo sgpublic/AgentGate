@@ -23,11 +23,12 @@
 | AGENT_GATE_TARGET_NAME        | --base-target-name      | 被 AgentGate 保护的目标服务的名称。                                                                                                                                                                         | （启动时尝试从 `$AGENT_GATE_TARGET_URL$AGENT_GATE_TARGET_HOME_PATH` 所指向的 HTML 中获取，获取失败则为 `AgentGate`） |
 | AGENT_GATE_AUTH_USERNAME      | --auth-username         | 认证用户名。                                                                                                                                                                                          |                                                                                                |
 | AGENT_GATE_AUTH_PASSWORD      | --auth-password         | 认证密码。                                                                                                                                                                                           |                                                                                                |
+| AGENT_GATE_AUTH_ALLOW_BASIC   | --auth-allow-basic      | 允许使用 basic 认证方式以适配第三方工具。                                                                                                                                                                        | false                                                                                          |
 | AGENT_GATE_TOKEN_SECURITY_KEY | --token-secret-key      | token 的签名密钥。                                                                                                                                                                                    | （每次启动随机生成 UUID）                                                                                |
 | AGENT_GATE_TOKEN_EXPIRE       | --token-expire          | 认证有效期，小于 0 则代表仅当前会话有效。                                                                                                                                                                          | 3600 * 24（即一天）                                                                                 |
 | AGENT_GATE_TOKEN_COOKIE_KEY   | --token-cookie-key      | 自定义 cookie 的 key，以避免与原有服务冲突。                                                                                                                                                                    | X-AgentGate-Auth                                                                               |
 
-配置文件仅支持 yaml 格式，配置项优先使用排序：环境变量 > 命令行参数 > 配置文件。
+配置项优先使用排序：环境变量 > 命令行参数。
 
 ## 部署
 
@@ -60,5 +61,6 @@ services:
 - [x] 初步完成认证拦截页面
 - [x] 支持环境变量配置参数
 - [x] 支持命令行传递参数
+- [x] 支持 basic 认证方式
 - [ ] 支持自定义前端页面
 - [ ] 支持内网跳过认证

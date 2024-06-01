@@ -114,6 +114,9 @@ object Config: CliktCommand(
     val AGENT_GATE_AUTH_PASSWORD: String by option("--auth-password", envvar = "AGENT_GATE_AUTH_PASSWORD")
         .required()
         .help("auth password")
+    val AGENT_GATE_AUTH_ALLOW_BASIC: Boolean by option("--auth-allow-basic", envvar = "AGENT_GATE_AUTH_ALLOW_BASIC")
+        .flag()
+        .help("allow basic auth")
 
     val AGENT_GATE_TOKEN_SECURITY_KEY: String by option("--token-security-key", envvar = "AGENT_GATE_TOKEN_SECURITY_KEY")
         .default(UUID.randomUUID().toString())

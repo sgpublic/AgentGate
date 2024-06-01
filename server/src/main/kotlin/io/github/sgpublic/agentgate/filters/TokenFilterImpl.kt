@@ -4,10 +4,12 @@ import io.github.sgpublic.agentgate.Config
 import io.github.sgpublic.agentgate.controller.ApiController
 import io.github.sgpublic.agentgate.exception.FailedResult
 import io.github.sgpublic.agentgate.exception.write
+import io.github.sgpublic.agentgate.service.AuthService.checkBasicAuth
 import io.github.sgpublic.agentgate.service.AuthService.checkTag
 import io.github.sgpublic.kotlin.util.log
 import org.springframework.cloud.gateway.filter.GatewayFilter
 import org.springframework.cloud.gateway.filter.GatewayFilterChain
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.web.server.ServerWebExchange
@@ -46,11 +48,15 @@ object TokenFilterImpl: GatewayFilter {
         }
 
         val auth = request.cookies[Config.AGENT_GATE_TOKEN_COOKIE_KEY]
-            ?.firstOrNull()?.value
-        val errorType = if (auth != null) {
-            checkTag(auth)
-        } else {
-            FailedResult.Auth.ExpiredToken
+            ?.firstOrNull()?.value?.takeIf { it.isNotBlank() }
+            ?: request.headers[HttpHeaders.AUTHORIZATION]?.firstOrNull()
+        val errorType = when {
+            Config.AGENT_GATE_AUTH_ALLOW_BASIC && auth?.startsWith("Basic ") == true ->
+                checkBasicAuth(auth)
+            auth != null ->
+                checkTag(auth)
+            else ->
+                FailedResult.Auth.ExpiredToken
         }
         if (errorType == null) {
             return chain.filter(exchange)
