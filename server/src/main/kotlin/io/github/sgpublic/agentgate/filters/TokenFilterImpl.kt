@@ -47,17 +47,22 @@ object TokenFilterImpl: GatewayFilter {
             }
         }
 
-        val auth = request.cookies[Config.AGENT_GATE_TOKEN_COOKIE_KEY]
-            ?.firstOrNull()?.value?.takeIf { it.isNotBlank() }
-            ?: request.headers[HttpHeaders.AUTHORIZATION]?.firstOrNull()
-        val errorType = when {
-            Config.AGENT_GATE_AUTH_ALLOW_BASIC && auth?.startsWith("Basic ") == true ->
-                checkBasicAuth(auth)
-            auth != null ->
-                checkTag(auth)
-            else ->
-                FailedResult.Auth.ExpiredToken
+        var errorType: FailedResult? = FailedResult.Auth.ExpiredToken
+
+        if (Config.AGENT_GATE_AUTH_ALLOW_BASIC) {
+            request.headers[HttpHeaders.AUTHORIZATION]?.firstOrNull()
+                ?.takeIf { it.startsWith("Basic ") }
+                ?.let { auth ->
+                    errorType = checkBasicAuth(auth)
+                }
         }
+
+        request.cookies[Config.AGENT_GATE_TOKEN_COOKIE_KEY]
+            ?.firstOrNull()?.value?.takeIf { it.isNotBlank() }
+            ?.let { auth ->
+                errorType = checkTag(auth)
+            }
+
         if (errorType == null) {
             return chain.filter(exchange)
         }
@@ -67,6 +72,6 @@ object TokenFilterImpl: GatewayFilter {
                 it.statusCode = HttpStatus.MOVED_TEMPORARILY
                 it.headers.location = URI.create("${Config.AGENT_GATE_BASE_PATH}/web/")
             }
-            .write(errorType)
+            .write(errorType!!)
     }
 }
