@@ -13,11 +13,13 @@ import org.jsoup.nodes.Document
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.gateway.filter.factory.AddRequestHeaderGatewayFilterFactory
+import org.springframework.cloud.gateway.filter.factory.RequestSizeGatewayFilterFactory
 import org.springframework.cloud.gateway.route.RouteLocator
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.core.io.ClassPathResource
+import org.springframework.util.unit.DataSize
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.RouterFunctions
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -129,6 +131,9 @@ object Config: CliktCommand(
         .default("X-AgentGate-Auth")
         .help("token cookie key")
 
+    val AGENT_GATE_SCG_REQUEST_MAXSIZE: String? by option("--scg-request-maxsize", envvar = "AGENT_GATE_SCG_REQUEST_MAXSIZE")
+        .help("(for SpringCloud Gateway) request max size")
+
     const val AGENT_GATE_JJWT_ISSUER = "agent-gate"
     const val AGENT_GATE_JJWT_TAG_KEY = "jjwt-tag"
 
@@ -188,6 +193,13 @@ class Application {
             .route("others") { r ->
                 r.path("/**")
                     .filters {
+                        Config.AGENT_GATE_SCG_REQUEST_MAXSIZE?.let { rawMaxSize ->
+                            val maxSizeConfig = RequestSizeGatewayFilterFactory.RequestSizeConfig()
+                                .setMaxSize(DataSize.parse(rawMaxSize))
+                            val maxSize = RequestSizeGatewayFilterFactory()
+                                .apply(maxSizeConfig)
+                            it.filter(maxSize)
+                        }
                         it.filter(TokenFilterImpl)
                     }
                     .uri(Config.AGENT_GATE_TARGET_URL)
