@@ -155,11 +155,16 @@ object Config: CliktCommand(
     private val HOME_HTML: Document? by lazy {
         val homePath = "$AGENT_GATE_TARGET_URL$AGENT_GATE_TARGET_HOME_PATH"
         log.debug("getting home html from: $homePath")
-        for (index in 0 until 5) {
+        for (index in 10 downTo 0) {
             try {
                 return@lazy Jsoup.connect(homePath).get()
             } catch (e: Exception) {
-                log.warn("getting home html failed, retrying...", e)
+                if (index > 0) {
+                    log.warn("getting home html failed, retrying in 5s...", e)
+                    Thread.sleep(5000)
+                } else {
+                    log.error("getting home html failed!", e)
+                }
             }
         }
         return@lazy null

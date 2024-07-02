@@ -19,6 +19,6 @@ val InfoJson by lazy {
     JsonGlobal.encodeToString(Info.serializer(), Info(
         serviceLogo = Config.AGENT_GATE_TARGET_LOGO
             .takeIf { !it.startsWith("file://") }
-            ?: "${Config.AGENT_GATE_BASE_PATH}/web/logo.${File(Config.AGENT_GATE_TARGET_LOGO).extension}",
+            ?: "${Config.AGENT_GATE_BASE_PATH}${File(Config.AGENT_GATE_TARGET_LOGO).extension}",
     ))
 }

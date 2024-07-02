@@ -22,7 +22,7 @@ object WebFilterImpl: GatewayFilter {
         if (auth != null && checkTag(auth) == null) {
             return exchange.response
                 .also {
-                    it.statusCode = HttpStatus.MOVED_TEMPORARILY
+                    it.statusCode = HttpStatus.FOUND
                     it.headers.location = URI.create("${Config.AGENT_GATE_BASE_PATH}${Config.AGENT_GATE_TARGET_HOME_PATH}")
                 }
                 .setComplete()
