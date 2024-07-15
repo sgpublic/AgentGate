@@ -55,6 +55,20 @@ object Config: CliktCommand(
         .check("target service home path should be start with '/'") {
             it.startsWith("/")
         }
+    val AGENT_GATE_TARGET_WAIT_RETRY_DURATION: Long by option("--target-wait-retry-duration", envvar = "AGENT_GATE_TARGET_WAIT_RETRY_DURATION")
+        .long()
+        .default(5000)
+        .help("target service online waiting retry duration")
+        .check("target service online waiting retry duration should larger than 0!") {
+            it > 0
+        }
+    val AGENT_GATE_TARGET_WAIT_RETRY_TIMES: Int by option("--target-wait-retry-times", envvar = "AGENT_GATE_TARGET_WAIT_RETRY_TIMES")
+        .int()
+        .default(10)
+        .help("target service online waiting retry times")
+        .check("target service online waiting retry times should not equals to 0!") {
+            it != 0
+        }
     private val _AGENT_GATE_TARGET_LOGO: String? by option("--target-logo", envvar = "AGENT_GATE_TARGET_LOGO")
         .help("target service logo url")
         .check("target service logo only support local file or network file") {
@@ -155,15 +169,20 @@ object Config: CliktCommand(
     private val HOME_HTML: Document? by lazy {
         val homePath = "$AGENT_GATE_TARGET_URL$AGENT_GATE_TARGET_HOME_PATH"
         log.debug("getting home html from: $homePath")
-        for (index in 10 downTo 0) {
+        var index = AGENT_GATE_TARGET_WAIT_RETRY_TIMES
+        while (index != 0) {
             try {
                 return@lazy Jsoup.connect(homePath).get()
             } catch (e: Exception) {
                 if (index > 0) {
-                    log.warn("getting home html failed, retrying in 5s...", e)
-                    Thread.sleep(5000)
+                    index -= 1
+                }
+                if (index != 0) {
+                    log.warn("getting home html failed, retrying in ${AGENT_GATE_TARGET_WAIT_RETRY_DURATION}ms...", e)
+                    Thread.sleep(AGENT_GATE_TARGET_WAIT_RETRY_DURATION)
                 } else {
                     log.error("getting home html failed!", e)
+                    break
                 }
             }
         }
