@@ -81,7 +81,8 @@ object Config: CliktCommand(
         }
         var logo =  "/favicon.ico"
         HOME_HTML?.let { html ->
-            val links = html.head().getElementsByTag("link")
+            val links = html.head()
+                .getElementsByTag("link")
             var size = -1
             for (link in links) {
                 try {
@@ -114,9 +115,34 @@ object Config: CliktCommand(
             return@lazy _AGENT_GATE_TARGET_NAME!!
         }
         var name = BuildConfig.APPLICATION_ID
-        HOME_HTML?.let { html ->
+        HOME_HTML?.let html@{ html ->
             try {
-                name = html.title()
+                html.title()
+                    .takeIf { it.isNotBlank() }
+                    ?.let {
+                        name = it
+                        return@html
+                    }
+
+                val metaProperty = setOf("og:title")
+                val metaName = setOf("twitter:title")
+                for (element in html.getElementsByTag("meta")) {
+                    if (metaProperty.contains(element.attribute("property").value)) {
+                        element.attribute("content").value
+                            .takeIf { it.isNotBlank() }
+                            ?.let {
+                                name = it
+                                return@html
+                            }
+                    } else if (metaName.contains(element.attribute("name").value)) {
+                        element.attribute("content").value
+                            .takeIf { it.isNotBlank() }
+                            ?.let {
+                                name = it
+                                return@html
+                            }
+                    }
+                }
             } catch (e: Exception) {
                 log.debug("failed reading title from home page of target service", e)
             }
