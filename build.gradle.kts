@@ -18,4 +18,4 @@ plugins {
 }
 
 group = "io.github.sgpublic"
-version = "1.0.0-beta04"
+version = "1.0.0-beta05"
