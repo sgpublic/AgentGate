@@ -3,6 +3,7 @@
 ## Gradle
 
 .gradle
+.kotlin
 **/build/
 !src/**/build/
 

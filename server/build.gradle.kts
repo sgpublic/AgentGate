@@ -1,159 +1,78 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import io.github.torrentpicker.findEnv
-import io.github.torrentpicker.GIT_HEAD
-import io.github.torrentpicker.COMMIT_COUNT_VERSION
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.api.tasks.Sync
 
 plugins {
-    alias(ag.plugins.docker.api)
-    alias(ag.plugins.buildconfig)
-
-    alias(ag.plugins.spring.boot)
-    alias(ag.plugins.spring.deps)
-
-    alias(ag.plugins.kotlin.plugin.jvm)
-    alias(ag.plugins.kotlin.plugin.serialization)
-    alias(ag.plugins.kotlin.plugin.spring)
-
-    application
+    alias(libs.plugins.docker)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.embed.raw)
 }
 
-group = "${rootProject.group}.agentgate"
-version = rootProject.version
-
-val mMainClass = "$group.Application"
-application {
-    mainClass = mMainClass
-}
-springBoot {
-    mainClass = mMainClass
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-dependencies {
-    implementation(ag.kotlin.reflect)
-    implementation(ag.kotlinx.serialization.json)
-
-    implementation(ag.spring.cloud.starter.gateway)
-
-    implementation(ag.uniktx.kotlin.common)
-    implementation(ag.uniktx.kotlin.logback)
-
-    implementation(ag.clikt)
-    implementation(ag.jsoup)
-
-    implementation(ag.jjwt.api)
-    runtimeOnly(ag.jjwt.impl)
-    runtimeOnly(ag.jjwt.gson)
-}
-
-dependencyManagement {
-    imports {
-        mavenBom(ag.spring.cloud.deps.get().toString())
+kotlin {
+    linuxX64 {
+        compilations.named("main") {
+            cinterops.create("embedRaw") {
+                defFile(layout.buildDirectory.file("embedRaw/agent_gate_web.def").get().asFile)
+            }
+        }
+        binaries {
+            executable {
+                entryPoint = "io.github.sgpublic.agentgate.main"
+                linkerOpts(layout.buildDirectory.file("embedRaw/agent_gate_web.o").get().asFile.absolutePath)
+            }
+        }
     }
-}
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "17"
-    }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-buildTimeConfig {
-    config {
-        packageName = "$group"
-        objectName = "BuildConfig"
-        destination = project.layout.buildDirectory.asFile
-
-        configProperties {
-            val VERSION_NAME: String by string("$version")
-            val VERSION_CODE: Int by int(COMMIT_COUNT_VERSION)
-            val COMMIT_ID: String by string(GIT_HEAD)
-            val APPLICATION_ID: String by string(rootProject.name)
+    sourceSets {
+        linuxX64Main.dependencies {
+            implementation(libs.clikt)
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.json)
+            implementation(libs.ktor.server.cio)
+            implementation(libs.ktor.server.content.negotiation)
+            implementation(libs.ktor.server.sessions)
+            implementation(libs.embed.raw.core)
+            implementation(libs.embed.raw.ktor)
         }
     }
 }
 
-tasks {
-    val clean by getting {
-        doLast {
-            delete("./src/main/resources/public")
-        }
-    }
-
-    val assembleWeb by creating {
-        dependsOn(":web:pnpmInstall", ":web:runBuild")
-        mustRunAfter(":web:pnpmInstall", ":web:runBuild")
-    }
-
-    val assembleServer by creating {
-        dependsOn(assembleWeb, assembleDist, installDist)
-        mustRunAfter(assembleWeb)
-    }
-
-    val dockerCreateDockerfile by creating(Dockerfile::class) {
-        group = "docker"
-        from("openjdk:17-slim-bullseye")
-        workingDir("/app")
-        copyFile("./install/${project.name}", "/app")
-        runCommand(listOf(
-            "useradd -u 1000 runner",
-            "apt-get update",
-            "apt-get install findutils -y",
-            "chown -R runner:runner /app"
-        ).joinToString(" &&\\\n "))
-        user("runner")
-        volume("/app/config.yaml")
-        entryPoint("/app/bin/${project.name}")
-    }
-
-    val tag = "mhmzx/agent-gate"
-    val dockerBuildReleaseImage by creating(DockerBuildImage::class) {
-        group = "docker"
-        dependsOn(assembleServer, dockerCreateDockerfile)
-        inputDir = project.file("./build")
-        dockerFile = dockerCreateDockerfile.destFile
-        images.add("$tag:$version")
-        images.add("$tag:latest")
-        noCache = true
-    }
-    val dockerPushReleaseImageOfficial by creating(DockerPushImage::class) {
-        group = "docker"
-        dependsOn(dockerBuildReleaseImage)
-        images.add("$tag:${rootProject.version}")
-        images.add("$tag:latest")
-    }
-    val dockerBuildNightlyImage by creating(DockerBuildImage::class) {
-        group = "docker"
-        dependsOn(assembleServer, dockerCreateDockerfile)
-        inputDir = project.file("./build")
-        dockerFile = dockerCreateDockerfile.destFile
-        images.add("$tag:nightly")
-        noCache = true
-    }
-    val dockerPushNightlyImageOfficial by creating(DockerPushImage::class) {
-        group = "docker"
-        dependsOn(dockerBuildNightlyImage)
-        images.add("$tag:nightly")
-    }
+embedRaw {
+    sourceDirectory.set(project(":web").layout.projectDirectory.dir("build"))
+    exclude.add("**/*.map")
+    baseName.set("agent_gate_web")
 }
 
-docker {
-    registryCredentials {
-        username = findEnv("publishing.docker.username")
-        password = findEnv("publishing.docker.password")
-        email = findEnv("publishing.developer.email")
-    }
+tasks.named("embedRaw") {
+    dependsOn(":web:runBuild")
 }
 
+val nativeExecutable = layout.buildDirectory.file("bin/linuxX64/releaseExecutable/server.kexe")
+val prepareDockerContext = tasks.register<Sync>("prepareDockerContext") {
+    dependsOn("linkReleaseExecutableLinuxX64")
+    from(nativeExecutable) {
+        rename { "agent-gate" }
+    }
+    into(layout.buildDirectory.dir("docker"))
+}
+
+val createDockerfile = tasks.register<Dockerfile>("createDockerfile") {
+    dependsOn(prepareDockerContext)
+    destFile.set(layout.buildDirectory.file("docker/Dockerfile"))
+    from("ubuntu:26.04")
+    runCommand("useradd --create-home agentgate")
+    copyFile("agent-gate", "/usr/local/bin/agent-gate")
+    runCommand("chmod 755 /usr/local/bin/agent-gate")
+    user("agentgate")
+    exposePort(1180)
+    entryPoint("/usr/local/bin/agent-gate")
+}
+
+tasks.register<DockerBuildImage>("dockerBuildImage") {
+    dependsOn(createDockerfile)
+    inputDir = layout.buildDirectory.dir("docker").get().asFile
+    dockerFile = createDockerfile.get().destFile
+    images.add("agent-gate:${rootProject.version}")
+}

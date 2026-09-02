@@ -1,0 +1,25 @@
+[versions]
+kotlin = "2.4.10"
+ktor = "3.5.2"
+clikt = "5.1.0"
+embed-raw = "0.1.0"
+node = "7.1.0"
+docker = "9.4.0"
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+embed-raw = { id = "io.github.sgpublic.embed-raw", version.ref = "embed-raw" }
+node = { id = "com.github.node-gradle.node", version.ref = "node" }
+docker = { id = "com.bmuschko.docker-remote-api", version.ref = "docker" }
+
+[libraries]
+clikt = { group = "com.github.ajalt.clikt", name = "clikt-core", version.ref = "clikt" }
+ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-cio = { group = "io.ktor", name = "ktor-server-cio", version.ref = "ktor" }
+ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-sessions = { group = "io.ktor", name = "ktor-server-sessions", version.ref = "ktor" }
+embed-raw-core = { group = "io.github.sgpublic", name = "embed-raw-core", version.ref = "embed-raw" }
+embed-raw-ktor = { group = "io.github.sgpublic", name = "embed-raw-ktor", version.ref = "embed-raw" }

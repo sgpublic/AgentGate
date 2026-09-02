@@ -1,7 +1,10 @@
-version: "3"
 services:
   agent-gate:
-    image: mhmzx/agent-gate:latest
+    image: agent-gate:2.0.0
     restart: unless-stopped
     ports:
-      - 8080:5000
+      - "1180:1180"
+    environment:
+      AGENT_GATE_AUTH_USERNAME: user
+      AGENT_GATE_AUTH_PASSWORD: password
+      AGENT_GATE_TARGET_URL: http://host.docker.internal:8080
