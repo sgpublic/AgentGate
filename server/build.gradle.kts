@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import org.gradle.api.tasks.Sync
 
 plugins {
@@ -70,9 +71,21 @@ val createDockerfile = tasks.register<Dockerfile>("createDockerfile") {
     entryPoint("/usr/local/bin/agent-gate")
 }
 
-tasks.register<DockerBuildImage>("dockerBuildImage") {
+val imageName = "mhmzx/agent-gate"
+val imageTags = listOf(
+    "$imageName:${rootProject.version}",
+    "$imageName:${rootProject.version.toString().substringBefore('.')}",
+    "$imageName:latest",
+)
+
+val dockerBuildImage = tasks.register<DockerBuildImage>("dockerBuildImage") {
     dependsOn(createDockerfile)
     inputDir = layout.buildDirectory.dir("docker").get().asFile
     dockerFile = createDockerfile.get().destFile
-    images.add("agent-gate:${rootProject.version}")
+    images.addAll(imageTags)
+}
+
+tasks.register<DockerPushImage>("dockerPushImage") {
+    dependsOn(dockerBuildImage)
+    images.addAll(imageTags)
 }

@@ -1,6 +1,6 @@
 services:
   agent-gate:
-    image: agent-gate:2.0.0
+    image: mhmzx/agent-gate:2.0.0
     restart: unless-stopped
     ports:
       - "1180:1180"

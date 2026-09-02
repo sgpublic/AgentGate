@@ -34,7 +34,7 @@ AgentGate 是一个运行在 Linux x64 上的 Kotlin/Native 认证反向代理�
 ```yaml
 services:
   agent-gate:
-    image: agent-gate:2.0.0
+    image: mhmzx/agent-gate:2.0.0
     restart: unless-stopped
     ports:
       - "1180:1180"
