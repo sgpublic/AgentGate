@@ -5,8 +5,7 @@ AgentGate 是一个运行在 Linux x64 上的 Kotlin/Native 认证反向代理�
 ## 路由行为
 
 - `GET /`：未认证时返回登录页面；认证后代理到目标服务根路径。
-- `POST /api/login`：验证用户名和密码，并建立 HTTP-only Ktor Session Cookie。
-- `GET /api/info`：返回登录页所需的目标服务信息。
+- `POST /api/login`、`GET /api/info`、`POST /api/logout`：未认证时由网关处理登录、登录页元信息及登出；认证后代理至目标服务的同一路径。
 - 其他路径：已认证时代理到目标服务；未认证时重定向至 `/`。
 - 前端静态资源与目标服务的本地 Logo 路径无需认证，以便登录页面正常显示。
 

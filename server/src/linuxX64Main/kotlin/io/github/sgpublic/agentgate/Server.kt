@@ -39,26 +39,38 @@ internal fun Application.agentGate(
 
     routing {
         post("/api/login") {
-            val login = call.receive<LoginDto>()
-            if (login.username == config.authUsername && login.password == config.authPassword) {
-                call.sessions.set(AuthSession())
-                call.respond(Result(200, "success."))
+            if (call.isAuthenticated(config)) {
+                call.proxy(client, config)
             } else {
-                call.respondWrongPassword()
+                val login = call.receive<LoginDto>()
+                if (login.username == config.authUsername && login.password == config.authPassword) {
+                    call.sessions.set(AuthSession())
+                    call.respond(Result(200, "success."))
+                } else {
+                    call.respondWrongPassword()
+                }
             }
         }
         get("/api/info") {
-            call.respond(
-                Info(
-                    versionName = "2.0.0",
-                    serviceName = targetMetadata.name,
-                    serviceLogo = targetMetadata.logo,
-                ),
-            )
+            if (call.isAuthenticated(config)) {
+                call.proxy(client, config)
+            } else {
+                call.respond(
+                    Info(
+                        versionName = "2.0.0",
+                        serviceName = targetMetadata.name,
+                        serviceLogo = targetMetadata.logo,
+                    ),
+                )
+            }
         }
         post("/api/logout") {
-            call.sessions.clear<AuthSession>()
-            call.respond(Result(200, "success."))
+            if (call.isAuthenticated(config)) {
+                call.proxy(client, config)
+            } else {
+                call.sessions.clear<AuthSession>()
+                call.respond(Result(200, "success."))
+            }
         }
         get("/") {
             if (call.isAuthenticated(config)) {
