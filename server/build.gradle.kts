@@ -1,6 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import org.gradle.api.tasks.Sync
 
 plugins {
@@ -82,10 +81,5 @@ val dockerBuildImage = tasks.register<DockerBuildImage>("dockerBuildImage") {
     dependsOn(createDockerfile)
     inputDir = layout.buildDirectory.dir("docker").get().asFile
     dockerFile = createDockerfile.get().destFile
-    images.addAll(imageTags)
-}
-
-tasks.register<DockerPushImage>("dockerPushImage") {
-    dependsOn(dockerBuildImage)
     images.addAll(imageTags)
 }

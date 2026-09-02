@@ -5,6 +5,8 @@ import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class TargetMetadata(private val config: AgentGateCommand) {
     suspend fun load(): TargetMetadataValue {
@@ -25,7 +27,7 @@ internal class TargetMetadata(private val config: AgentGateCommand) {
                 // The target may not be ready when AgentGate starts.
             }
             if (retries > 0) retries--
-            if (retries != 0) kotlinx.coroutines.delay(config.targetWaitRetryDuration)
+            if (retries != 0) delay(config.targetWaitRetryDuration.milliseconds)
         }
         return null
     }

@@ -1,5 +1,5 @@
-import React, {Dispatch, FC, SetStateAction, useEffect, useRef, useState} from "react";
-import {Helmet} from "react-helmet";
+import {Dispatch, FC, SetStateAction, useEffect, useRef, useState} from "react";
+import {Helmet, HelmetProvider} from "react-helmet-async";
 import {useTranslation} from "react-i18next";
 import {Form, Card, FormItem, Input, FormSubmit, FormHelpers, Alert} from "@hi-ui/hiui";
 import {TFunction} from "i18next";
@@ -19,10 +19,10 @@ const LoginPage: FC = () => {
     }, [])
     useEffect(() => {
         document.title = t("login_title") + title
-    }, [title]);
+    }, [t, title]);
 
     return (
-        <div style={{
+        <HelmetProvider><div style={{
             display: "flex",
             alignItems: "center",
             flexDirection: "column",
@@ -77,8 +77,8 @@ const LoginPage: FC = () => {
                 }}>
                 <Form
                     initialValues={{
-                        username: process.env.REACT_APP_ADMIN_USERNAME ?? "",
-                        password: process.env.REACT_APP_ADMIN_PASSWORD ?? ""
+                        username: import.meta.env.VITE_ADMIN_USERNAME ?? "",
+                        password: import.meta.env.VITE_ADMIN_PASSWORD ?? ""
                     }}
                     labelWidth={80}
                     rules={{
@@ -135,7 +135,7 @@ const LoginPage: FC = () => {
                     </FormItem>
                 </Form>
             </Card>
-        </div>
+        </div></HelmetProvider>
     )
 }
 
