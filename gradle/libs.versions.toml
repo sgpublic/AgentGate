@@ -5,6 +5,7 @@ clikt = "5.1.0"
 embed-raw = "0.1.0"
 node = "7.1.0"
 docker = "9.4.0"
+buildkonfig = "0.22.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -12,6 +13,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 embed-raw = { id = "io.github.sgpublic.embed-raw", version.ref = "embed-raw" }
 node = { id = "com.github.node-gradle.node", version.ref = "node" }
 docker = { id = "com.bmuschko.docker-remote-api", version.ref = "docker" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 
 [libraries]
 clikt = { group = "com.github.ajalt.clikt", name = "clikt-core", version.ref = "clikt" }

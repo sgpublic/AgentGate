@@ -1,17 +1,17 @@
 package io.github.sgpublic.agentgate
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.headers
-import io.ktor.client.request.request
+import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
-import io.ktor.http.parameters
 import io.ktor.http.takeFrom
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
@@ -19,7 +19,6 @@ import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytes
 
 private val requestHopByHopHeaders = setOf(
     HttpHeaders.Connection,
@@ -50,7 +49,7 @@ internal suspend fun ApplicationCall.proxy(client: HttpClient, config: AgentGate
             values.forEach { value -> parameters.append(name, value) }
         }
     }.build()
-    val response = client.request(targetUrl) {
+    client.prepareRequest(targetUrl) {
         method = incomingRequest.httpMethod
         headers {
             incomingRequest.headers.forEach { name, values ->
@@ -60,8 +59,9 @@ internal suspend fun ApplicationCall.proxy(client: HttpClient, config: AgentGate
             }
         }
         if (incomingRequest.httpMethod !in methodsWithoutBody) setBody(receive<ByteArray>())
+    }.execute { response ->
+        respondProxy(response)
     }
-    respondProxy(response)
 }
 
 private suspend fun ApplicationCall.respondProxy(response: HttpResponse) {
@@ -70,7 +70,13 @@ private suspend fun ApplicationCall.respondProxy(response: HttpResponse) {
             values.forEach { value -> this.response.header(name, value) }
         }
     }
-    respondBytes(response.body(), response.contentType(), response.status)
+    val upstreamBody = response.bodyAsChannel()
+    respond(object : OutgoingContent.ReadChannelContent() {
+        override val contentType = response.contentType()
+        override val status = response.status
+
+        override fun readFrom() = upstreamBody
+    })
 }
 
 internal fun parseByteSize(value: String): Long? {

@@ -1,6 +1,7 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.gradle.api.tasks.Sync
 import org.gradle.kotlin.dsl.register
 
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.embed.raw)
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -38,6 +40,13 @@ kotlin {
             implementation(libs.embed.raw.core)
             implementation(libs.embed.raw.ktor)
         }
+    }
+}
+
+buildkonfig {
+    packageName = "io.github.sgpublic.agentgate"
+    defaultConfigs {
+        buildConfigField(STRING, "VERSION", rootProject.version.toString())
     }
 }
 

@@ -66,7 +66,11 @@ internal object AgentGateCommand : CoreSuspendingCliktCommand(name = "agent-gate
 internal suspend fun startAgentGate(config: AgentGateCommand) {
     val targetMetadata = TargetMetadata(config).load()
     val resources = embeddedRawResources(_binary_agent_gate_web_bin_start)
-    val client = HttpClient(ClientCIO)
+    val client = HttpClient(ClientCIO) {
+        engine {
+            requestTimeout = 0
+        }
+    }
 
     embeddedServer(ServerCIO, port = config.port) {
         agentGate(config, targetMetadata, resources, client)
