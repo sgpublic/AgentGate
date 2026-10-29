@@ -33,6 +33,8 @@ private val requestHopByHopHeaders = setOf(
 private val responseHopByHopHeaders = requestHopByHopHeaders + HttpHeaders.ContentLength
 private val methodsWithoutBody = setOf(HttpMethod.Get, HttpMethod.Head, HttpMethod.Options)
 
+private fun Set<String>.containsHeader(name: String) = any { it.equals(name, ignoreCase = true) }
+
 internal suspend fun ApplicationCall.proxy(client: HttpClient, config: AgentGateCommand) {
     val contentLength = request.headers[HttpHeaders.ContentLength]?.toLongOrNull()
     val maxSize = config.requestMaxSize?.let(::parseByteSize)
@@ -53,7 +55,10 @@ internal suspend fun ApplicationCall.proxy(client: HttpClient, config: AgentGate
         method = incomingRequest.httpMethod
         headers {
             incomingRequest.headers.forEach { name, values ->
-                if (name !in requestHopByHopHeaders && name != HttpHeaders.Host && name != HttpHeaders.ContentLength) {
+                if (!requestHopByHopHeaders.containsHeader(name) &&
+                    !name.equals(HttpHeaders.Host, ignoreCase = true) &&
+                    !name.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                ) {
                     values.forEach { value -> append(name, value) }
                 }
             }
@@ -66,7 +71,7 @@ internal suspend fun ApplicationCall.proxy(client: HttpClient, config: AgentGate
 
 private suspend fun ApplicationCall.respondProxy(response: HttpResponse) {
     response.headers.forEach { name, values ->
-        if (name !in responseHopByHopHeaders && name != HttpHeaders.ContentLength) {
+        if (!responseHopByHopHeaders.containsHeader(name)) {
             values.forEach { value -> this.response.header(name, value) }
         }
     }

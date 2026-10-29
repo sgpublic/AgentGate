@@ -7,4 +7,4 @@ plugins {
 }
 
 group = "io.github.sgpublic"
-version = "2.1.0"
+version = "2.1.1"
