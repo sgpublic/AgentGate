@@ -3,6 +3,8 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.bundling.Compression
+import org.gradle.api.tasks.bundling.Tar
 import org.gradle.kotlin.dsl.register
 
 plugins {
@@ -61,6 +63,50 @@ tasks.named("embedRaw") {
 }
 
 val nativeExecutable = layout.buildDirectory.file("bin/linuxX64/releaseExecutable/server.kexe")
+val releaseTag = "v${rootProject.version}"
+val releaseArchive = tasks.register<Tar>("releaseArchive") {
+    dependsOn("linkReleaseExecutableLinuxX64")
+    archiveFileName.set("agent-gate_${rootProject.version}_linux_x64.tar.gz")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+    compression = Compression.GZIP
+    from(nativeExecutable) {
+        rename { "agent-gate" }
+        filePermissions { unix("755") }
+    }
+}
+
+val validateReleaseTag = tasks.register("validateReleaseTag") {
+    doLast {
+        val eventTag = providers.environmentVariable("GITHUB_REF_NAME").orNull
+        require(eventTag == null || eventTag == releaseTag) {
+            "GitHub tag $eventTag does not match project version tag $releaseTag"
+        }
+        val head = providers.exec {
+            commandLine("git", "rev-parse", "HEAD")
+        }.standardOutput.asText.get().trim()
+        val taggedCommit = providers.exec {
+            commandLine("gh", "api", "repos/sgpublic/AgentGate/commits/$releaseTag", "--jq", ".sha")
+        }.standardOutput.asText.get().trim()
+        require(head == taggedCommit) {
+            "GitHub tag $releaseTag points to $taggedCommit, not the current commit $head"
+        }
+    }
+}
+
+tasks.register<Exec>("githubRelease") {
+    group = "publishing"
+    description = "Create the GitHub release and upload the Linux x64 archive."
+    dependsOn(validateReleaseTag, releaseArchive)
+    doFirst {
+        commandLine(
+            "gh", "release", "create", releaseTag,
+            releaseArchive.get().archiveFile.get().asFile.absolutePath,
+            "--repo", "sgpublic/AgentGate",
+            "--verify-tag", "--generate-notes",
+        )
+    }
+}
+
 val prepareDockerContext = tasks.register<Sync>("prepareDockerContext") {
     dependsOn("linkReleaseExecutableLinuxX64")
     from(nativeExecutable) {
